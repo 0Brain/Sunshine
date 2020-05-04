@@ -33,7 +33,7 @@ class OpenWeatherJsonUtils {
             /* String array to hold each day's weather String */
 
             /* String array to hold each day's weather String */
-            var parsedWeatherData:Array<String?>
+            val parsedWeatherData:Array<String?>
 
 
             val forecastJson = JSONObject(forecastJsonStr)
@@ -62,7 +62,7 @@ class OpenWeatherJsonUtils {
 
             for (i in 0 until weatherArray.length()) {
                 var date: String
-                var highAndLow: String
+                var highAndLow: String?
 
                 /* These are the values that will be collected */
                 var dateTimeMillis: Long
@@ -97,8 +97,8 @@ class OpenWeatherJsonUtils {
                 val temperatureObject = dayForecast.getJSONObject(OWM_TEMPERATURE)
                 high = temperatureObject.getDouble(OWM_MAX)
                 low = temperatureObject.getDouble(OWM_MIN)
-                //highAndLow = SunshineWeatherUtils.formatHighLows(context, high, low)
-                parsedWeatherData[i] = "$date - $description "
+                highAndLow = SunshineWeatherUtils.formatHighLows(context, high, low)
+                parsedWeatherData[i] = "$date - $description - $highAndLow"
             }
 
             return parsedWeatherData

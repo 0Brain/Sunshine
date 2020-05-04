@@ -1,9 +1,11 @@
 package com.prasan.sunshine.utils
 
-import android.R
+
 import android.content.Context
 
+
 import android.text.format.DateUtils
+import com.prasan.sunshine.R
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -166,17 +168,21 @@ class SunshineDateUtils {
          */
             val dayNumber = getDayNumber(dateInMillis)
             val currentDayNumber = getDayNumber(System.currentTimeMillis())
-            return if (dayNumber == currentDayNumber) {
-                context.getString(R.string.VideoView_error_button)
-            } else if (dayNumber == currentDayNumber + 1) {
-                context.getString(R.string.VideoView_error_text_invalid_progressive_playback)
-            } else {
-                /*
-                     * Otherwise, if the day is not today, the format is just the day of the week
-                     * (e.g "Wednesday")
-                     */
-                val dayFormat = SimpleDateFormat("EEEE")
-                dayFormat.format(dateInMillis)
+            when (dayNumber) {
+                currentDayNumber -> {
+                    return context.getString(R.string.today)
+                }
+                currentDayNumber + 1 -> {
+                    return context.getString(R.string.tomorrow)
+                }
+                else -> {
+                    /*
+                             * Otherwise, if the day is not today, the format is just the day of the week
+                             * (e.g "Wednesday")
+                             */
+                    val dayFormat = SimpleDateFormat("EEEE")
+                    return dayFormat.format(dateInMillis)
+                }
             }
         }
     }
