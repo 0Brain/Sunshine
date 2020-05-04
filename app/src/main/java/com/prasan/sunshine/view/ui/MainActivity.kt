@@ -89,7 +89,7 @@ class MainActivity : AppCompatActivity() {
             if(weatherData!=null){
                 binding.tvErrorText.visibility = View.INVISIBLE
                 binding.rvWeather.visibility = View.VISIBLE
-                sunshineAdapter.WeatherData(weatherData)
+                sunshineAdapter.weatherData = weatherData
             }else{
                 binding.tvErrorText.visibility = View.VISIBLE
             }
