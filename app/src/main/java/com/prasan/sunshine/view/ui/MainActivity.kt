@@ -1,11 +1,14 @@
 package com.prasan.sunshine.view.ui
 
+import android.content.Intent
 import android.os.AsyncTask
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -20,7 +23,7 @@ import java.io.IOException
 import java.net.URL
 
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(),SunshineAdapter.SunshineAdapterOnClickHandler {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var sunshineAdapter:SunshineAdapter
@@ -31,7 +34,7 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        sunshineAdapter = SunshineAdapter()
+        sunshineAdapter = SunshineAdapter(this)
         weatherRecyclerView = findViewById(R.id.rv_weather)
         rv_weather.layoutManager = LinearLayoutManager(this)
         rv_weather.setHasFixedSize(true)
@@ -101,6 +104,12 @@ class MainActivity : AppCompatActivity() {
         }
 
 
+    }
+    override fun onClick(weatherForTheDay: String?) {
+        Log.d("test","clicked")
+        val intent = Intent(this,DetailActivity::class.java)
+        intent.putExtra(Intent.EXTRA_TEXT,weatherForTheDay)
+        startActivity(intent)
     }
 
 }

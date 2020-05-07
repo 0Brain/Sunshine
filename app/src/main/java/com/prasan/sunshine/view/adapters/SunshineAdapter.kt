@@ -7,7 +7,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.prasan.sunshine.R
 
-class SunshineAdapter : RecyclerView.Adapter<SunshineAdapter.SunShineViewHolder>() {
+class SunshineAdapter : RecyclerView.Adapter<SunshineAdapter.SunShineViewHolder> {
 
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SunShineViewHolder {
@@ -31,10 +31,31 @@ class SunshineAdapter : RecyclerView.Adapter<SunshineAdapter.SunShineViewHolder>
             notifyDataSetChanged()
         }
 
-    inner class SunShineViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+    var mClickHandler:SunshineAdapterOnClickHandler? = null
+
+    constructor(clickHandler: SunshineAdapterOnClickHandler) {
+        mClickHandler = clickHandler
+    }
+
+
+    interface SunshineAdapterOnClickHandler{
+        fun onClick(weatherForTheDay: String?)
+    }
+
+    inner class SunShineViewHolder(view:View) : RecyclerView.ViewHolder(view) ,View.OnClickListener{
+        init {
+            view.setOnClickListener(this)
+        }
+
         fun onBind(weatherForTheDay: String?) {
             val weatherTextView = itemView.findViewById(R.id.tv_weather_text) as TextView
             weatherTextView.text = weatherForTheDay.toString()
+        }
+
+        override fun onClick(v: View?) {
+            val adapterPosition = adapterPosition
+            val weatherString = weatherData[adapterPosition]
+            mClickHandler!!.onClick(weatherString)
         }
 
     }
