@@ -1,15 +1,17 @@
 package com.prasan.sunshine.view.ui
 
 import android.content.Intent
-import android.os.AsyncTask
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.loader.app.LoaderManager
+import androidx.loader.content.AsyncTaskLoader
+import androidx.loader.content.Loader
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.prasan.sunshine.R
@@ -19,15 +21,20 @@ import com.prasan.sunshine.utils.OpenWeatherJsonUtils
 import com.prasan.sunshine.utils.SunshinePreferences
 import com.prasan.sunshine.view.adapters.SunshineAdapter
 import kotlinx.android.synthetic.main.activity_main.*
-import java.io.IOException
 import java.net.URL
 
 
-class MainActivity : AppCompatActivity(),SunshineAdapter.SunshineAdapterOnClickHandler {
+class MainActivity : AppCompatActivity(),SunshineAdapter.SunshineAdapterOnClickHandler,
+    LoaderManager.LoaderCallbacks<Array<String?>> {
+
+    private val TAG = MainActivity::class.java.simpleName
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var sunshineAdapter:SunshineAdapter
     private lateinit var weatherRecyclerView: RecyclerView
+    companion object{
+        private const val FORECAST_LOADER_ID = 0
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -51,65 +58,91 @@ class MainActivity : AppCompatActivity(),SunshineAdapter.SunshineAdapterOnClickH
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when(item.itemId){
             R.id.menu_refresh -> {
-                binding.rvWeather.visibility = View.INVISIBLE
-                binding.tvErrorText.visibility = View.INVISIBLE
-                loadWeatherData()
+                sunshineAdapter.weatherData = emptyArray()
+                supportLoaderManager.restartLoader(FORECAST_LOADER_ID,null,this@MainActivity)
+            }
+            R.id.action_map ->{
+                openLocationMap()
             }
         }
         return super.onOptionsItemSelected(item)
     }
 
+    private fun openLocationMap() {
+        val addressString = "1600 Ampitheatre Parkway, CA"
+        val geoLocation: Uri = Uri.parse("geo:0,0?q=$addressString")
+
+        val intent = Intent(Intent.ACTION_VIEW).apply {
+            data = geoLocation
+        }
+        if(intent.resolveActivity(packageManager)!=null){
+            startActivity(intent)
+        }else{
+            Log.d(TAG, "Couldn't call $geoLocation, no receiving apps installed!");
+        }
+
+    }
 
 
     private fun loadWeatherData() {
-        val location: String? = SunshinePreferences.getPreferredWeatherLocation(this)
-        FetchWeatherTask().execute(location)
+        supportLoaderManager.initLoader(FORECAST_LOADER_ID,null,this@MainActivity)
     }
 
-    inner class FetchWeatherTask:AsyncTask<String,Unit,Array<String?>?>(){
-        override fun doInBackground(vararg params: String?): Array<String?>? {
-            if(params.isEmpty()){
-                return null!!
-            }
-            val preferredLocation: String? = params[0]
-            val locationUrl:URL
-            var simpleJsonWeatherData:Array<String?>? = null
-            try {
-                locationUrl = NetworkUtils.buildUrl(preferredLocation!!)
-                val jsonWeatherResponse = NetworkUtils
-                    .getResponseFromHttpUrl(locationUrl)
-                simpleJsonWeatherData = OpenWeatherJsonUtils
-                    .getSimpleWeatherStringsFromJson(this@MainActivity, jsonWeatherResponse)
-            }catch (e:IOException){
-                e.printStackTrace()
-            }
-            return simpleJsonWeatherData
-        }
-
-        override fun onPostExecute(weatherData: Array<String?>?) {
-            binding.tvErrorText.text = getString(R.string.load_error_message)
-            binding.pbLoadingIndicator.visibility = View.INVISIBLE
-            if(weatherData!=null){
-                binding.tvErrorText.visibility = View.INVISIBLE
-                binding.rvWeather.visibility = View.VISIBLE
-                sunshineAdapter.weatherData = weatherData
-            }else{
-                binding.tvErrorText.visibility = View.VISIBLE
-            }
-        }
-
-        override fun onPreExecute() {
-            super.onPreExecute()
-            binding.pbLoadingIndicator.visibility = View.VISIBLE
-        }
-
-
-    }
     override fun onClick(weatherForTheDay: String?) {
         Log.d("test","clicked")
         val intent = Intent(this,DetailActivity::class.java)
         intent.putExtra(Intent.EXTRA_TEXT,weatherForTheDay)
         startActivity(intent)
     }
+
+    override fun onCreateLoader(id: Int, args: Bundle?): Loader<Array<String?>> {
+        return object :AsyncTaskLoader<Array<String?>>(this){
+
+            var mWeatherData: Array<String?>? = null
+
+            override fun onStartLoading() {
+                if(mWeatherData!=null){
+                    deliverResult(mWeatherData)
+                }else{
+                    binding.pbLoadingIndicator.visibility = View.VISIBLE
+                    forceLoad()
+                }
+            }
+
+            override fun loadInBackground(): Array<String?>? {
+                val location: String? = SunshinePreferences.getPreferredWeatherLocation(this@MainActivity)
+                val weatherRequestUrl:URL = NetworkUtils.buildUrl(location!!)
+                var simpleJsonWeatherData:Array<String?>? = null
+                try {
+                    val jsonWeatherResponse = NetworkUtils.getResponseFromHttpUrl(weatherRequestUrl)
+                    simpleJsonWeatherData = OpenWeatherJsonUtils
+                        .getSimpleWeatherStringsFromJson(this@MainActivity, jsonWeatherResponse)
+
+                }catch (e:Exception){
+                    e.printStackTrace()
+                }
+                return simpleJsonWeatherData
+            }
+
+            override fun deliverResult(weatherData: Array<String?>?) {
+                mWeatherData = weatherData
+                super.deliverResult(weatherData)
+            }
+        }
+    }
+
+    override fun onLoadFinished(loader: Loader<Array<String?>>, arrayWeatherData: Array<String?>) {
+        if(arrayWeatherData!=null){
+            sunshineAdapter.weatherData = arrayWeatherData
+            binding.pbLoadingIndicator.visibility = View.INVISIBLE
+        }else{
+            binding.tvErrorText.visibility = View.VISIBLE
+        }
+    }
+
+    override fun onLoaderReset(loader: Loader<Array<String?>>) {
+        TODO("Not yet implemented")
+    }
+
 
 }
