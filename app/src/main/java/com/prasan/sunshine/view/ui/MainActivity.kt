@@ -1,6 +1,7 @@
 package com.prasan.sunshine.view.ui
 
 import android.content.Intent
+import android.content.SharedPreferences
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -12,6 +13,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.loader.app.LoaderManager
 import androidx.loader.content.AsyncTaskLoader
 import androidx.loader.content.Loader
+import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.prasan.sunshine.R
@@ -25,15 +27,17 @@ import java.net.URL
 
 
 class MainActivity : AppCompatActivity(),SunshineAdapter.SunshineAdapterOnClickHandler,
-    LoaderManager.LoaderCallbacks<Array<String?>> {
+    LoaderManager.LoaderCallbacks<Array<String?>>,SharedPreferences.OnSharedPreferenceChangeListener {
 
     private val TAG = MainActivity::class.java.simpleName
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var sunshineAdapter:SunshineAdapter
     private lateinit var weatherRecyclerView: RecyclerView
+
     companion object{
         private const val FORECAST_LOADER_ID = 0
+        private var PREFERENCES_HAVE_BEEN_UPDATED = false
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -47,6 +51,13 @@ class MainActivity : AppCompatActivity(),SunshineAdapter.SunshineAdapterOnClickH
         rv_weather.setHasFixedSize(true)
         rv_weather.adapter = sunshineAdapter
         loadWeatherData()
+        PreferenceManager.getDefaultSharedPreferences(this).registerOnSharedPreferenceChangeListener(this)
+
+    }
+
+    override fun onDestroy() {
+        PreferenceManager.getDefaultSharedPreferences(this).unregisterOnSharedPreferenceChangeListener(this)
+        super.onDestroy()
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -64,12 +75,16 @@ class MainActivity : AppCompatActivity(),SunshineAdapter.SunshineAdapterOnClickH
             R.id.action_map ->{
                 openLocationMap()
             }
+            R.id.settings->{
+                val intent = Intent(this@MainActivity,SettingsActivity::class.java)
+                startActivity(intent)
+            }
         }
         return super.onOptionsItemSelected(item)
     }
 
     private fun openLocationMap() {
-        val addressString = "1600 Ampitheatre Parkway, CA"
+        val addressString = SunshinePreferences.getPreferredWeatherLocation(this)
         val geoLocation: Uri = Uri.parse("geo:0,0?q=$addressString")
 
         val intent = Intent(Intent.ACTION_VIEW).apply {
@@ -86,6 +101,14 @@ class MainActivity : AppCompatActivity(),SunshineAdapter.SunshineAdapterOnClickH
 
     private fun loadWeatherData() {
         supportLoaderManager.initLoader(FORECAST_LOADER_ID,null,this@MainActivity)
+    }
+
+    override fun onStart() {
+        if(PREFERENCES_HAVE_BEEN_UPDATED){
+            supportLoaderManager.restartLoader(FORECAST_LOADER_ID,null,this@MainActivity)
+            PREFERENCES_HAVE_BEEN_UPDATED = false
+        }
+        super.onStart()
     }
 
     override fun onClick(weatherForTheDay: String?) {
@@ -132,16 +155,16 @@ class MainActivity : AppCompatActivity(),SunshineAdapter.SunshineAdapterOnClickH
     }
 
     override fun onLoadFinished(loader: Loader<Array<String?>>, arrayWeatherData: Array<String?>) {
-        if(arrayWeatherData!=null){
-            sunshineAdapter.weatherData = arrayWeatherData
-            binding.pbLoadingIndicator.visibility = View.INVISIBLE
-        }else{
-            binding.tvErrorText.visibility = View.VISIBLE
-        }
+        sunshineAdapter.weatherData = arrayWeatherData
+        binding.pbLoadingIndicator.visibility = View.INVISIBLE
     }
 
     override fun onLoaderReset(loader: Loader<Array<String?>>) {
         TODO("Not yet implemented")
+    }
+
+    override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
+        PREFERENCES_HAVE_BEEN_UPDATED = true
     }
 
 

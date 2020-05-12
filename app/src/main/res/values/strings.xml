@@ -113,6 +113,8 @@
     <string name="action_refresh">Refresh</string>
     <string name="action_share">Share</string>
     <string name="action_map">Map Location</string>
+    <string name="menu_settings">Settings</string>
+
 
 
     <!-- - - - - - - - - - - -->
@@ -128,5 +130,24 @@
     <!-- - - - - - - - - - - - - - -->
     <!--Used by SunshinePreferences-->
     <!-- - - - - - - - - - - - - - -->
+    <string name="pref_location_default" translatable="false">Mountain View, CA 94043</string>
+    <string name="prefs_location_title">Location</string>
+    <string name="prefs_location_key" translatable="false">location</string>
+    <string name="pref_unit_title">Temperature Units</string>
+    <string name="pref_unit_key" translatable="false">units</string>
+
+    <!-- Label for metric option in temperature unit preference [CHAR LIMIT=25] -->
+    <string name="pref_units_label_metric">Metric</string>
+
+    <!-- Label for imperial option in temperature unit preference [CHAR LIMIT=25] -->
+    <string name="pref_units_label_imperial">Imperial</string>
+
+    <!-- Label for metric option in temperature unit preference [CHAR LIMIT=25] -->
+    <string name="pref_units_value_metric">metric</string>
+
+    <!-- Label for imperial option in temperature unit preference [CHAR LIMIT=25] -->
+    <string name="pref_units_value_imperial">imperial</string>
     <!--NONE-->
+
+
 </resources>

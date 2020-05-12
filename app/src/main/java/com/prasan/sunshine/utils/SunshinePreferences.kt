@@ -1,6 +1,9 @@
 package com.prasan.sunshine.utils
 
 import android.content.Context
+import androidx.preference.PreferenceManager
+import com.prasan.sunshine.R
+
 
 class SunshinePreferences {
 
@@ -85,8 +88,11 @@ class SunshinePreferences {
          * "94043,USA" if SharedPreferences have not been implemented yet.
          */
         fun getPreferredWeatherLocation(context: Context?): String? {
-            /** This will be implemented in a future lesson  */
-            return getDefaultWeatherLocation()
+            val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
+            val locationKey = context!!.getString(R.string.prefs_location_key)
+            val locationDefaultValue = context.getString(R.string.pref_location_default)
+
+            return sharedPreferences.getString(locationKey,locationDefaultValue)
         }
 
         /**
@@ -96,8 +102,14 @@ class SunshinePreferences {
          * @return true If metric display should be used
          */
         fun isMetric(context: Context?): Boolean {
-            /** This will be implemented in a future lesson  */
-            return true
+            val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
+            val keyForUnits = context!!.getString(R.string.pref_unit_key)
+            val defaultValueForUnits = context.getString(R.string.pref_units_value_metric)
+            val preferredUnits = sharedPreferences.getString(keyForUnits,defaultValueForUnits)
+            val metric = context.getString(R.string.pref_units_value_metric)
+            val userPrefersMetric:Boolean
+            userPrefersMetric = preferredUnits == metric
+            return userPrefersMetric
         }
 
         /**

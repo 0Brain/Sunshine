@@ -21,7 +21,7 @@ class DetailActivity : AppCompatActivity() {
         binding = ActivityDetailBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val intent = getIntent()
+        val intent = intent
         weatherStringText = intent.getStringExtra(Intent.EXTRA_TEXT)
         binding.tvDetailWeatherText.text = weatherStringText
 
@@ -31,6 +31,10 @@ class DetailActivity : AppCompatActivity() {
         when(item.itemId){
             R.id.menu_share ->{
                 shareCompatBuilder(weatherStringText)
+            }
+            R.id.settings->{
+                val intent = Intent(this@DetailActivity,SettingsActivity::class.java)
+                startActivity(intent)
             }
         }
         return super.onOptionsItemSelected(item)
