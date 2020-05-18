@@ -20,7 +20,7 @@ import com.prasan.sunshine.R
 import com.prasan.sunshine.databinding.ActivityMainBinding
 import com.prasan.sunshine.utils.NetworkUtils
 import com.prasan.sunshine.utils.OpenWeatherJsonUtils
-import com.prasan.sunshine.utils.SunshinePreferences
+import com.prasan.sunshine.data.SunshinePreferences
 import com.prasan.sunshine.view.adapters.SunshineAdapter
 import kotlinx.android.synthetic.main.activity_main.*
 import java.net.URL
@@ -133,8 +133,7 @@ class MainActivity : AppCompatActivity(),SunshineAdapter.SunshineAdapterOnClickH
             }
 
             override fun loadInBackground(): Array<String?>? {
-                val location: String? = SunshinePreferences.getPreferredWeatherLocation(this@MainActivity)
-                val weatherRequestUrl:URL = NetworkUtils.buildUrl(location!!)
+                val weatherRequestUrl:URL = NetworkUtils.getUrl(context)
                 var simpleJsonWeatherData:Array<String?>? = null
                 try {
                     val jsonWeatherResponse = NetworkUtils.getResponseFromHttpUrl(weatherRequestUrl)

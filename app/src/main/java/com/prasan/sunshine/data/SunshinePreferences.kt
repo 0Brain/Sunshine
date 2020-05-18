@@ -1,4 +1,4 @@
-package com.prasan.sunshine.utils
+package com.prasan.sunshine.data
 
 import android.content.Context
 import androidx.preference.PreferenceManager
@@ -26,7 +26,7 @@ class SunshinePreferences {
      * Before you implement methods to return your REAL preference for location,
      * we provide some default values to work with.
      */
-        private const val DEFAULT_WEATHER_LOCATION = "94043,USA"
+        private const val DEFAULT_WEATHER_LOCATION = "94043,UK"
         private val DEFAULT_WEATHER_COORDINATES =
             doubleArrayOf(37.4284, 122.0724)
 
@@ -49,6 +49,35 @@ class SunshinePreferences {
             lon: Double
         ) {
             /** This will be implemented in a future lesson  */
+        }
+
+        /**
+         * Helper method to handle setting location details in Preferences (city name, latitude,
+         * longitude)
+         *
+         *
+         * When the location details are updated, the database should to be cleared.
+         *
+         * @param context  Context used to get the SharedPreferences
+         * @param lat      the latitude of the city
+         * @param lon      the longitude of the city
+         */
+        fun setLocationDetails(
+            context: Context?,
+            lat: Double,
+            lon: Double
+        ) {
+            val sp = PreferenceManager.getDefaultSharedPreferences(context)
+            val editor = sp.edit()
+            editor.putLong(
+                PREF_COORD_LAT,
+                java.lang.Double.doubleToRawLongBits(lat)
+            )
+            editor.putLong(
+                PREF_COORD_LONG,
+                java.lang.Double.doubleToRawLongBits(lon)
+            )
+            editor.apply()
         }
 
         /**
@@ -112,30 +141,6 @@ class SunshinePreferences {
             return userPrefersMetric
         }
 
-        /**
-         * Returns the location coordinates associated with the location.  Note that these coordinates
-         * may not be set, which results in (0,0) being returned. (conveniently, 0,0 is in the middle
-         * of the ocean off the west coast of Africa)
-         *
-         * @param context Used to get the SharedPreferences
-         * @return An array containing the two coordinate values.
-         */
-        fun getLocationCoordinates(context: Context?): DoubleArray? {
-            return getDefaultWeatherCoordinates()
-        }
-
-        /**
-         * Returns true if the latitude and longitude values are available. The latitude and
-         * longitude will not be available until the lesson where the PlacePicker API is taught.
-         *
-         * @param context used to get the SharedPreferences
-         * @return true if lat/long are set
-         */
-        fun isLocationLatLonAvailable(context: Context?): Boolean {
-            /** This will be implemented in a future lesson  */
-            return false
-        }
-
         private fun getDefaultWeatherLocation(): String? {
             /** This will be implemented in a future lesson  */
             return DEFAULT_WEATHER_LOCATION
@@ -145,5 +150,61 @@ class SunshinePreferences {
             /** This will be implemented in a future lesson  */
             return DEFAULT_WEATHER_COORDINATES
         }
+
+        /**
+         * Returns true if the latitude and longitude values are available. The latitude and
+         * longitude will not be available until the lesson where the PlacePicker API is taught.
+         *
+         * @param context used to get the SharedPreferences
+         * @return true if lat/long are saved in SharedPreferences
+         */
+        fun isLocationLatLonAvailable(context: Context?): Boolean {
+            val sp = PreferenceManager.getDefaultSharedPreferences(context)
+            val spContainLatitude = sp.contains(PREF_COORD_LAT)
+            val spContainLongitude = sp.contains(PREF_COORD_LONG)
+            var spContainBothLatitudeAndLongitude = false
+            if (spContainLatitude && spContainLongitude) {
+                spContainBothLatitudeAndLongitude = true
+            }
+            return spContainBothLatitudeAndLongitude
+        }
+
+        /**
+         * Returns the location coordinates associated with the location. Note that there is a
+         * possibility that these coordinates may not be set, which results in (0,0) being returned.
+         * Interestingly, (0,0) is in the middle of the ocean off the west coast of Africa.
+         *
+         * @param context used to access SharedPreferences
+         * @return an array containing the two coordinate values for the user's preferred location
+         */
+        fun getLocationCoordinates(context: Context?): DoubleArray? {
+            val sp = PreferenceManager.getDefaultSharedPreferences(context)
+            val preferredCoordinates = DoubleArray(2)
+
+            /*
+         * This is a hack we have to resort to since you can't store doubles in SharedPreferences.
+         *
+         * Double.doubleToLongBits returns an integer corresponding to the bits of the given
+         * IEEE 754 double precision value.
+         *
+         * Double.longBitsToDouble does the opposite, converting a long (that represents a double)
+         * into the double itself.
+         */preferredCoordinates[0] = java.lang.Double
+                .longBitsToDouble(
+                    sp.getLong(
+                        PREF_COORD_LAT,
+                        java.lang.Double.doubleToRawLongBits(0.0)
+                    )
+                )
+            preferredCoordinates[1] = java.lang.Double
+                .longBitsToDouble(
+                    sp.getLong(
+                        PREF_COORD_LONG,
+                        java.lang.Double.doubleToRawLongBits(0.0)
+                    )
+                )
+            return preferredCoordinates
+        }
+
     }
 }

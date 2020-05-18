@@ -4,6 +4,7 @@ package com.prasan.sunshine.utils
 import android.content.Context
 import android.util.Log
 import com.prasan.sunshine.R
+import com.prasan.sunshine.data.SunshinePreferences
 
 
 class SunshineWeatherUtils {
