@@ -2,6 +2,7 @@ package com.prasan.sunshine.view.ui
 
 import android.content.Intent
 import android.content.SharedPreferences
+import android.database.Cursor
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -11,41 +12,56 @@ import android.view.MenuItem
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.loader.app.LoaderManager
-import androidx.loader.content.AsyncTaskLoader
+import androidx.loader.content.CursorLoader
 import androidx.loader.content.Loader
 import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.facebook.stetho.Stetho
 import com.prasan.sunshine.R
-import com.prasan.sunshine.databinding.ActivityMainBinding
-import com.prasan.sunshine.utils.NetworkUtils
-import com.prasan.sunshine.utils.OpenWeatherJsonUtils
 import com.prasan.sunshine.data.SunshinePreferences
+import com.prasan.sunshine.data.WeatherContract
+import com.prasan.sunshine.databinding.ActivityMainBinding
+import com.prasan.sunshine.utils.FakeDataUtils
 import com.prasan.sunshine.view.adapters.SunshineAdapter
 import kotlinx.android.synthetic.main.activity_main.*
-import java.net.URL
 
 
 class MainActivity : AppCompatActivity(),SunshineAdapter.SunshineAdapterOnClickHandler,
-    LoaderManager.LoaderCallbacks<Array<String?>>,SharedPreferences.OnSharedPreferenceChangeListener {
+    LoaderManager.LoaderCallbacks<Cursor>,SharedPreferences.OnSharedPreferenceChangeListener {
 
-    private val TAG = MainActivity::class.java.simpleName
+
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var sunshineAdapter:SunshineAdapter
     private lateinit var weatherRecyclerView: RecyclerView
 
     companion object{
-        private const val FORECAST_LOADER_ID = 0
+        private val TAG = MainActivity::class.java.simpleName
+        private const val FORECAST_LOADER_ID = 45
         private var PREFERENCES_HAVE_BEEN_UPDATED = false
+        const val INDEX_WEATHER_DATE = 0
+        const val INDEX_WEATHER_MAX_TEMP = 1
+        const val INDEX_WEATHER_MIN_TEMP = 2
+        const val INDEX_WEATHER_CONDITION_ID = 3
+        private var mPosition = RecyclerView.NO_POSITION
+        val MAIN_FORECAST_PROJECTION = arrayOf(
+            WeatherContract.WeatherEntry.COLUMN_DATE,
+            WeatherContract.WeatherEntry.COLUMN_MAX_TEMP,
+            WeatherContract.WeatherEntry.COLUMN_MIN_TEMP,
+            WeatherContract.WeatherEntry.COLUMN_WEATHER_ID
+        )
     }
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        Stetho.initializeWithDefaults(this)
+        FakeDataUtils.insertFakeData(this)
 
-        sunshineAdapter = SunshineAdapter(this)
+        sunshineAdapter = SunshineAdapter(this,this)
         weatherRecyclerView = findViewById(R.id.rv_weather)
         rv_weather.layoutManager = LinearLayoutManager(this)
         rv_weather.setHasFixedSize(true)
@@ -100,6 +116,8 @@ class MainActivity : AppCompatActivity(),SunshineAdapter.SunshineAdapterOnClickH
 
 
     private fun loadWeatherData() {
+        binding.pbLoadingIndicator.visibility = View.VISIBLE
+        binding.rvWeather.visibility = View.INVISIBLE
         supportLoaderManager.initLoader(FORECAST_LOADER_ID,null,this@MainActivity)
     }
 
@@ -111,60 +129,65 @@ class MainActivity : AppCompatActivity(),SunshineAdapter.SunshineAdapterOnClickH
         super.onStart()
     }
 
-    override fun onClick(weatherForTheDay: String?) {
+    override fun onClick(date: Long?) {
         Log.d("test","clicked")
         val intent = Intent(this,DetailActivity::class.java)
-        intent.putExtra(Intent.EXTRA_TEXT,weatherForTheDay)
+        val uriForDataClicked = WeatherContract.WeatherEntry.buildWeatherUriWithDate(date!!)
+        intent.data = uriForDataClicked
         startActivity(intent)
     }
 
-    override fun onCreateLoader(id: Int, args: Bundle?): Loader<Array<String?>> {
-        return object :AsyncTaskLoader<Array<String?>>(this){
 
-            var mWeatherData: Array<String?>? = null
-
-            override fun onStartLoading() {
-                if(mWeatherData!=null){
-                    deliverResult(mWeatherData)
-                }else{
-                    binding.pbLoadingIndicator.visibility = View.VISIBLE
-                    forceLoad()
-                }
-            }
-
-            override fun loadInBackground(): Array<String?>? {
-                val weatherRequestUrl:URL = NetworkUtils.getUrl(context)
-                var simpleJsonWeatherData:Array<String?>? = null
-                try {
-                    val jsonWeatherResponse = NetworkUtils.getResponseFromHttpUrl(weatherRequestUrl)
-                    simpleJsonWeatherData = OpenWeatherJsonUtils
-                        .getSimpleWeatherStringsFromJson(this@MainActivity, jsonWeatherResponse)
-
-                }catch (e:Exception){
-                    e.printStackTrace()
-                }
-                return simpleJsonWeatherData
-            }
-
-            override fun deliverResult(weatherData: Array<String?>?) {
-                mWeatherData = weatherData
-                super.deliverResult(weatherData)
-            }
-        }
-    }
-
-    override fun onLoadFinished(loader: Loader<Array<String?>>, arrayWeatherData: Array<String?>) {
-        sunshineAdapter.weatherData = arrayWeatherData
-        binding.pbLoadingIndicator.visibility = View.INVISIBLE
-    }
-
-    override fun onLoaderReset(loader: Loader<Array<String?>>) {
-        TODO("Not yet implemented")
-    }
 
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
         PREFERENCES_HAVE_BEEN_UPDATED = true
     }
 
+    override fun onCreateLoader(loaderId: Int, args: Bundle?): Loader<Cursor> {
+        when(loaderId){
+            FORECAST_LOADER_ID ->{
+                /* URI for all rows of weather data in our weather table */
+                val sunshineUri = WeatherContract.WeatherEntry.CONTENT_URI
+                /* Sort order: Ascending by date */
+                val sortOrder = WeatherContract.WeatherEntry.COLUMN_DATE + " ASC"
+                /*
+                 * A SELECTION in SQL declares which rows you'd like to return. In our case, we
+                 * want all weather data from today onwards that is stored in our weather table.
+                 * We created a handy method to do that in our WeatherEntry class.
+                 */
+                val selection = WeatherContract.WeatherEntry.getSqlSelectForTodayOnwards()
 
+                return CursorLoader(
+                    this@MainActivity,
+                    sunshineUri,
+                    MAIN_FORECAST_PROJECTION,
+                    selection,
+                    null,
+                    sortOrder
+                )
+            }else->{
+                throw IllegalArgumentException("Loader not implemented $loaderId")
+            }
+        }
+    }
+
+    override fun onLoadFinished(loader: Loader<Cursor>, data: Cursor?) {
+        sunshineAdapter.swapCursor(data)
+        if (mPosition == RecyclerView.NO_POSITION) mPosition = 0;
+        weatherRecyclerView.scrollToPosition(mPosition)
+        if(data!!.count!=0){
+            binding.pbLoadingIndicator.visibility = View.INVISIBLE;
+            /* Finally, make sure the weather data is visible */
+            weatherRecyclerView.visibility = View.VISIBLE;
+        }
+
+    }
+
+    override fun onLoaderReset(loader: Loader<Cursor>) {
+        /*
+        * Since this Loader's data is now invalid, we need to clear the Adapter that is
+        * displaying the data.
+        */
+        sunshineAdapter.swapCursor(null);
+    }
 }

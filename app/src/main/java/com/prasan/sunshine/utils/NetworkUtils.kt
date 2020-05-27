@@ -120,7 +120,7 @@ class NetworkUtils {
             val urlConnection:HttpURLConnection = url.openConnection() as HttpURLConnection
             try {
                  val inStream:InputStream = urlConnection.inputStream
-                 val scanner: Scanner = Scanner(inStream)
+                 val scanner = Scanner(inStream)
                 scanner.useDelimiter("\\A")
                 val hasInput:Boolean = scanner.hasNext()
                 return if (hasInput){

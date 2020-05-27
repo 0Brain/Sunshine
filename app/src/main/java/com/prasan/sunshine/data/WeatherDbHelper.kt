@@ -5,15 +5,18 @@ import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import android.provider.BaseColumns
 
-class WeatherDbHelper(context: Context): SQLiteOpenHelper(context, DATABASE_NAME,null,
-    DATABASE_VERSION) {
+class WeatherDbHelper(context: Context) : SQLiteOpenHelper(
+    context, DATABASE_NAME, null,
+    DATABASE_VERSION
+) {
 
-    companion object{
-     /*
-    * This is the name of our database. Database names should be descriptive and end with the
-    * .db extension.
-    */
-        const val DATABASE_NAME:String = "weather.db"
+    companion object {
+        /*
+       * This is the name of our database. Database names should be descriptive and end with the
+       * .db extension.
+       */
+        const val DATABASE_NAME: String = "weather.db"
+
         /*
         * If you change the database schema, you must increment the database version or the onUpgrade
         * method will not be called.
@@ -25,7 +28,7 @@ class WeatherDbHelper(context: Context): SQLiteOpenHelper(context, DATABASE_NAME
         * use-case, we wanted to watch out for it and warn you what could happen if you mistakenly
         * version your databases.
         */
-        const val DATABASE_VERSION:Int = 1
+        const val DATABASE_VERSION: Int = 1
     }
 
     /**
@@ -40,31 +43,36 @@ class WeatherDbHelper(context: Context): SQLiteOpenHelper(context, DATABASE_NAME
          * cache our weather data.
          */
         val SQL_CREATE_WEATHER_TABLE =
-                "CREATE TABLE " + WeatherContract.WeatherEntry.TABLE_NAME + " (" +
-        /*
-         * WeatherEntry did not explicitly declare a column called "_ID". However,
-         * WeatherEntry implements the interface, "BaseColumns", which does have a field
-         * named "_ID". We use that here to designate our table's primary key.
-         */
 
-                BaseColumns._ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
+            "CREATE TABLE " + WeatherContract.WeatherEntry.TABLE_NAME + " (" +
 
-                WeatherContract.WeatherEntry.COLUMN_DATE + " INTEGER NOT NULL, " +
+                    /*
+                     * WeatherEntry did not explicitly declare a column called "_ID". However,
+                     * WeatherEntry implements the interface, "BaseColumns", which does have a field
+                     * named "_ID". We use that here to designate our table's primary key.
+                     */
+                    BaseColumns._ID               + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
 
-                WeatherContract.WeatherEntry.COLUMN_WEATHER_ID + " INTEGER NOT NULL, " +
+                    WeatherContract.WeatherEntry.COLUMN_DATE       + " INTEGER NOT NULL, "                 +
 
-                WeatherContract.WeatherEntry.COLUMN_MIN_TEMP + "REAL NOT NULL" +
+                    WeatherContract.WeatherEntry.COLUMN_WEATHER_ID + " INTEGER NOT NULL,"                  +
 
-                WeatherContract.WeatherEntry.COLUMN_MAX_TEMP + "REAL NOT NULL" +
+                    WeatherContract.WeatherEntry.COLUMN_MIN_TEMP   + " REAL NOT NULL, "                    +
+                    WeatherContract.WeatherEntry.COLUMN_MAX_TEMP   + " REAL NOT NULL, "                    +
 
-                WeatherContract.WeatherEntry.COLUMN_HUMIDITY + "REAL NOT NULL" +
+                    WeatherContract.WeatherEntry.COLUMN_HUMIDITY   + " REAL NOT NULL, "                    +
+                    WeatherContract.WeatherEntry.COLUMN_PRESSURE   + " REAL NOT NULL, "                    +
 
-                WeatherContract.WeatherEntry.COLUMN_PRESSURE + "REAL NOT NULL" +
+                    WeatherContract.WeatherEntry.COLUMN_WIND_SPEED + " REAL NOT NULL, "                    +
+                    WeatherContract.WeatherEntry.COLUMN_DEGREES    + " REAL NOT NULL, "                    +
 
-                WeatherContract.WeatherEntry.COLUMN_WIND_SPEED + "REAL NOT NULL" +
-
-                WeatherContract.WeatherEntry.COLUMN_DEGREES + "REAL NOT NULL" +
-                "); "
+                    /*
+                     * To ensure this table can only contain one weather entry per date, we declare
+                     * the date column to be unique. We also specify "ON CONFLICT REPLACE". This tells
+                     * SQLite that if we have a weather entry for a certain date and we attempt to
+                     * insert another weather entry with that date, we replace the old weather entry.
+                     */
+                    " UNIQUE (" + WeatherContract.WeatherEntry.COLUMN_DATE + ") ON CONFLICT REPLACE);"
         /*
          * After we've spelled out our SQLite table creation statement above, we actually execute
          * that SQL with the execSQL method of our SQLite database object.
@@ -86,7 +94,7 @@ class WeatherDbHelper(context: Context): SQLiteOpenHelper(context, DATABASE_NAME
      * @param newVersion     The new database version
      */
     override fun onUpgrade(db: SQLiteDatabase?, oldVersion: Int, newVersion: Int) {
-        db!!.execSQL("DROP TABLE IF EXISTS"+WeatherContract.WeatherEntry.TABLE_NAME)
+        db!!.execSQL("DROP TABLE IF EXISTS" + WeatherContract.WeatherEntry.TABLE_NAME)
         onCreate(db)
     }
 }

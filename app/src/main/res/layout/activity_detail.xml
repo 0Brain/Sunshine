@@ -1,17 +1,59 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="8dp"
+    android:orientation="vertical"
     tools:context=".view.ui.DetailActivity">
 
+    <!--TextView for the selected day's date -->
     <TextView
-        android:id="@+id/tv_detail_weather_text"
+        android:id="@+id/tv_date"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="22sp"/>
+        style="@style/TextAppearance.AppCompat.Large"/>
 
-</FrameLayout>
+    <!-- Text that describes weather condition -->
+    <TextView
+        android:id="@+id/tv_description"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        style="@style/TextAppearance.AppCompat.Large"/>
+
+    <!-- High temperature for today -->
+    <TextView
+        android:id="@+id/tv_max_temperature"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        style="@style/TextAppearance.AppCompat.Large"/>
+
+    <!-- Low temperature for today -->
+    <TextView
+        android:id="@+id/tv_min_temperature"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        style="@style/TextAppearance.AppCompat.Large"/>
+
+    <!-- Humidity  -->
+    <TextView
+        android:id="@+id/tv_humidity"
+        style="@style/TextAppearance.AppCompat.Large"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <!-- Pressure  -->
+    <TextView
+        android:id="@+id/tv_pressure"
+        style="@style/TextAppearance.AppCompat.Large"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+    <!-- Wind  -->
+    <TextView
+        android:id="@+id/tv_wind"
+        style="@style/TextAppearance.AppCompat.Large"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+</LinearLayout>

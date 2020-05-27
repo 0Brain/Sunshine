@@ -34,11 +34,11 @@ class SunshineWeatherUtils {
          * @return Formatted temperature String in the following form:
          * "21°C"
          */
-        private fun formatTemperature(context: Context, temperature: Double): String {
-            var temperature = temperature
+         fun formatTemperature(context: Context, temperature: Double): String {
+            var temp = temperature
             var temperatureFormatResourceId: Int = R.string.format_temperature_celsius
             if (!SunshinePreferences.isMetric(context)) {
-                temperature = celsiusToFahrenheit(temperature)
+                temp = celsiusToFahrenheit(temperature)
                 temperatureFormatResourceId = R.string.format_temperature_fahrenheit
             }
 
