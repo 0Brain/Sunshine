@@ -121,7 +121,7 @@ class OpenWeatherJsonUtils {
         }
 
         @Throws(JSONException::class)
-        fun getWeatherContentsFromJson(context: Context, forecastJsonStr: String?):Array<ContentValues?>{
+        fun getWeatherContentValuesFromJson(context: Context, forecastJsonStr: String?):Array<ContentValues?>{
             val forecastJson = JSONObject(forecastJsonStr)
 
             /* Is there an error? */

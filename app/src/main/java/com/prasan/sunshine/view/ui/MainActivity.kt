@@ -10,6 +10,7 @@ import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.loader.app.LoaderManager
 import androidx.loader.content.CursorLoader
@@ -22,6 +23,7 @@ import com.prasan.sunshine.R
 import com.prasan.sunshine.data.SunshinePreferences
 import com.prasan.sunshine.data.WeatherContract
 import com.prasan.sunshine.databinding.ActivityMainBinding
+import com.prasan.sunshine.sync.SunshineSyncUtils
 import com.prasan.sunshine.utils.FakeDataUtils
 import com.prasan.sunshine.view.adapters.SunshineAdapter
 import kotlinx.android.synthetic.main.activity_main.*
@@ -59,7 +61,6 @@ class MainActivity : AppCompatActivity(),SunshineAdapter.SunshineAdapterOnClickH
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         Stetho.initializeWithDefaults(this)
-        FakeDataUtils.insertFakeData(this)
 
         sunshineAdapter = SunshineAdapter(this,this)
         weatherRecyclerView = findViewById(R.id.rv_weather)
@@ -67,6 +68,7 @@ class MainActivity : AppCompatActivity(),SunshineAdapter.SunshineAdapterOnClickH
         rv_weather.setHasFixedSize(true)
         rv_weather.adapter = sunshineAdapter
         loadWeatherData()
+        SunshineSyncUtils.initialize(this@MainActivity)
         PreferenceManager.getDefaultSharedPreferences(this).registerOnSharedPreferenceChangeListener(this)
 
     }
@@ -134,6 +136,7 @@ class MainActivity : AppCompatActivity(),SunshineAdapter.SunshineAdapterOnClickH
         val intent = Intent(this,DetailActivity::class.java)
         val uriForDataClicked = WeatherContract.WeatherEntry.buildWeatherUriWithDate(date!!)
         intent.data = uriForDataClicked
+
         startActivity(intent)
     }
 
